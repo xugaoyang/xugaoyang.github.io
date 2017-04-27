@@ -160,14 +160,96 @@ http服务器
 <li>返回视图</li>
 </ol>
 <hr>
-<h4 id="主文件index-js"><a href="#主文件index-js" class="headerlink" title="主文件index.js"></a>主文件index.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">var server=require(&quot;./server&quot;);  //require从外部获取模块的接口</div><div class="line">var router=require(&quot;./router&quot;);</div><div class="line">var requestHandlers=require(&quot;./requestHandlers&quot;);</div><div class="line">var handle=&#123;&#125;;  //对象传值，不同的pathname对应不同的处理请求</div><div class="line">handle[&apos;/&apos;]=requestHandlers.start;</div><div class="line">handle[&apos;/start&apos;]=requestHandlers.start;</div><div class="line">handle[&apos;/upload&apos;]=requestHandlers.upload;</div><div class="line">handle[&apos;/show&apos;]=requestHandlers.show;</div><div class="line">server.start(router.route,handle);</div></pre></td></tr></table></figure>
-<h4 id="http服务器server-js"><a href="#http服务器server-js" class="headerlink" title="http服务器server.js"></a>http服务器server.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">var http = require(&quot;http&quot;);  //请求node.js自带的http模块</div><div class="line">var url = require(&quot;url&quot;);</div><div class="line">function start(route,handle) &#123;</div><div class="line">  function onRequest(request, response) &#123;  //http模块自带的方法</div><div class="line">    var pathname=url.parse(request.url).pathname;  //方法如下</div><div class="line">    console.log(&quot;Request for&quot;+pathname+&quot;received;&quot;);</div><div class="line">    route(handle,pathname,response,request);</div><div class="line">  &#125;</div><div class="line">  http.createServer(onRequest).listen(8888);  //http模块函数启动服务器监听8888端口</div><div class="line">  console.log(&quot;Server has started.&quot;);</div><div class="line">&#125;</div><div class="line">exports.start = start;</div></pre></td></tr></table></figure>
-<p>url.parse()方法介绍</p>
+<h4 id="主文件index-js"><a href="#主文件index-js" class="headerlink" title="主文件index.js"></a>主文件index.js</h4><pre><code>var server=require(&quot;./server&quot;);  //require从外部获取模块的接口
+var router=require(&quot;./router&quot;);
+var requestHandlers=require(&quot;./requestHandlers&quot;);
+var handle={};  //对象传值，不同的pathname对应不同的处理请求
+handle[&apos;/&apos;]=requestHandlers.start;
+handle[&apos;/start&apos;]=requestHandlers.start;
+handle[&apos;/upload&apos;]=requestHandlers.upload;
+handle[&apos;/show&apos;]=requestHandlers.show;
+server.start(router.route,handle);
+</code></pre><h4 id="http服务器server-js"><a href="#http服务器server-js" class="headerlink" title="http服务器server.js"></a>http服务器server.js</h4><pre><code>var http = require(&quot;http&quot;);  //请求node.js自带的http模块
+var url = require(&quot;url&quot;);
+function start(route,handle) {
+  function onRequest(request, response) {  //http模块自带的方法
+    var pathname=url.parse(request.url).pathname;  //方法如下
+    console.log(&quot;Request for&quot;+pathname+&quot;received;&quot;);
+    route(handle,pathname,response,request);
+  }
+  http.createServer(onRequest).listen(8888);  //http模块函数启动服务器监听8888端口
+  console.log(&quot;Server has started.&quot;);
+}
+exports.start = start;
+</code></pre><p>url.parse()方法介绍</p>
 <p>eg：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">var url = require(&apos;url&apos;);</div><div class="line">var a = url.parse(&apos;http://example.com:8080/one?a=index&amp;t=article&amp;m=default&apos;);</div><div class="line">console.log(a);</div><div class="line">//输出结果：</div><div class="line">&#123;</div><div class="line">    protocol : &apos;http&apos; ,</div><div class="line">    auth : null ,</div><div class="line">    host : &apos;example.com:8080&apos; ,</div><div class="line">    port : &apos;8080&apos; ,</div><div class="line">    hostname : &apos;example.com&apos; ,</div><div class="line">    hash : null ,</div><div class="line">    search : &apos;?a=index&amp;t=article&amp;m=default&apos;,</div><div class="line">    query : &apos;a=index&amp;t=article&amp;m=default&apos;,</div><div class="line">    pathname : &apos;/one&apos;,</div><div class="line">    path : &apos;/one?a=index&amp;t=article&amp;m=default&apos;,</div><div class="line">    href : &apos;http://example.com:8080/one?a=index&amp;t=article&amp;m=default&apos;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>这里引入一组概念：exports 和 module.exports，同有导出模块功能，形似但非神似。<br>每一个node.js执行文件都会自动创建一个module对象，同时，module对象会创建一个exports的属性，初始值是{},<br><code>exports=module.exports={}</code><br>exports是引用 module.exports的值。exports 被改变的时候，module.exports不会被改变，而模块导出的时候，真正导出的执行是module.exports，而不是exports.</p>
-<h4 id="路由router-js"><a href="#路由router-js" class="headerlink" title="路由router.js"></a>路由router.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">function route(handle,pathname,response,request)&#123;</div><div class="line">  console.log(&quot;about to route a request for&quot;+pathname);</div><div class="line">  if(typeof handle[pathname]===&apos;function&apos;)&#123;  //检查给定路径对应的请求处理程序是否存在</div><div class="line">    handle[pathname](response,request);</div><div class="line">  &#125; else &#123;</div><div class="line">    console.log(&quot;no request handle found for&quot;+pathname);</div><div class="line">    response.writeHead(404, &#123;&quot;Content-Type&quot;: &quot;text/plain&quot;&#125;);  //收到请求发送http状态码和http头的内容类型</div><div class="line">    response.write(&quot;404 Not found&quot;);  //向http相应主体发送文本</div><div class="line">    response.end();  //完成响应</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line">exports.route=route;</div></pre></td></tr></table></figure>
-<h4 id="请求处理requestHandlers-js"><a href="#请求处理requestHandlers-js" class="headerlink" title="请求处理requestHandlers.js"></a>请求处理requestHandlers.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line">var querystring=require(&quot;querystring&quot;),  //对http请求所带的数据进行解析，一般是问号后面“”=“”这类的数据</div><div class="line">    fs=require(&apos;fs&apos;),  //file system，文件操作模块</div><div class="line">    formidable=require(&quot;formidable&quot;);  //表单模块</div><div class="line">function start(response) &#123;</div><div class="line">  console.log(&quot;Request handler &apos;start&apos; was called.&quot;);</div><div class="line">  var body= &apos;&lt;html&gt;&apos;+</div><div class="line">    &apos;&lt;head&gt;&apos;+</div><div class="line">    &apos;&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; &apos;+</div><div class="line">    &apos;charset=UTF-8&quot; /&gt;&apos;+</div><div class="line">    &apos;&lt;/head&gt;&apos;+</div><div class="line">    &apos;&lt;body&gt;&apos;+</div><div class="line">    &apos;&lt;form action=&quot;/upload&quot; enctype=&quot;multipart/form-data&quot; &apos;+</div><div class="line">    &apos;method=&quot;post&quot;&gt;&apos;+</div><div class="line">    &apos;&lt;input type=&quot;file&quot; name=&quot;upload&quot; multiple=&quot;multiple&quot;&gt;&apos;+</div><div class="line">    &apos;&lt;input type=&quot;submit&quot; value=&quot;Upload file&quot; /&gt;&apos;+</div><div class="line">    &apos;&lt;/form&gt;&apos;+</div><div class="line">    &apos;&lt;/body&gt;&apos;+</div><div class="line">    &apos;&lt;/html&gt;&apos;;</div><div class="line">    response.writeHead(200, &#123;&quot;Content-Type&quot;: &quot;text/html&quot;&#125;);</div><div class="line">    response.write(body);</div><div class="line">    response.end();</div><div class="line">&#125;</div><div class="line">function upload(response,request) &#123;</div><div class="line">  console.log(&quot;Request handler &apos;upload&apos; was called.&quot;);</div><div class="line">  var form=new formidable.IncomingForm();  //创建对象</div><div class="line">  form.uploadDir=&apos;tmp&apos;;  //设置上传文件存放的文件夹，默认为系统的临时文件夹，可以使用fs.rename()改变上传文件的存放路径和文件名 临时文件存放路径，如果没有这段代码可能会报错，因为跨磁盘分区移动的问题</div><div class="line">  console.log(&quot;about to parse&quot;);</div><div class="line">  form.parse(request,function(error,fields,files)&#123;  //解析request对象</div><div class="line">    console.log(&quot;parsing done&quot;);</div><div class="line">    fs.renameSync(files.upload.path,&quot;/tmp/test.png&quot;);  //重命名，oldpath--&gt;newpath</div><div class="line">    response.writeHead(200, &#123;&quot;Content-Type&quot;: &quot;text/html&quot;&#125;);</div><div class="line">    response.write(&quot;received image:&lt;br/&gt;&quot;);</div><div class="line">    response.write(&quot;&lt;img src=&apos;/show&apos;&gt;&quot;);</div><div class="line">    response.end();</div><div class="line">  &#125;);</div><div class="line">&#125;</div><div class="line">function show(response, request) &#123;</div><div class="line">  console.log(&quot;Request handler &apos;show&apos; was called.&quot;);</div><div class="line">  fs.readFile(&quot;/tmp/test.png&quot;, &quot;binary&quot;, function(error, file) &#123;  //fs.readfile(文件名，编码，回调函数(err,data))异步读取</div><div class="line">    if(error) &#123;</div><div class="line">      response.writeHead(500, &#123;&quot;Content-Type&quot;: &quot;text/plain&quot;&#125;);</div><div class="line">      response.write(error + &quot;\n&quot;);</div><div class="line">      response.end();</div><div class="line">    &#125; else &#123;</div><div class="line">      response.writeHead(200, &#123;&quot;Content-Type&quot;: &quot;image/png&quot;&#125;);</div><div class="line">      response.write(file, &quot;binary&quot;);</div><div class="line">      response.end();</div><div class="line">    &#125;</div><div class="line">  &#125;);</div><div class="line">&#125;</div><div class="line">exports.start = start;</div><div class="line">exports.upload = upload;</div><div class="line">exports.show=show;</div></pre></td></tr></table></figure>
-
+<h4 id="路由router-js"><a href="#路由router-js" class="headerlink" title="路由router.js"></a>路由router.js</h4><pre><code>function route(handle,pathname,response,request){
+  console.log(&quot;about to route a request for&quot;+pathname);
+  if(typeof handle[pathname]===&apos;function&apos;){  //检查给定路径对应的请求处理程序是否存在
+    handle[pathname](response,request);
+  } else {
+    console.log(&quot;no request handle found for&quot;+pathname);
+    response.writeHead(404, {&quot;Content-Type&quot;: &quot;text/plain&quot;});  //收到请求发送http状态码和http头的内容类型
+    response.write(&quot;404 Not found&quot;);  //向http相应主体发送文本
+    response.end();  //完成响应
+  }
+}
+exports.route=route;
+</code></pre><h4 id="请求处理requestHandlers-js"><a href="#请求处理requestHandlers-js" class="headerlink" title="请求处理requestHandlers.js"></a>请求处理requestHandlers.js</h4><pre><code>var querystring=require(&quot;querystring&quot;),  //对http请求所带的数据进行解析，一般是问号后面“”=“”这类的数据
+    fs=require(&apos;fs&apos;),  //file system，文件操作模块
+    formidable=require(&quot;formidable&quot;);  //表单模块
+function start(response) {
+  console.log(&quot;Request handler &apos;start&apos; was called.&quot;);
+  var body= &apos;&lt;html&gt;&apos;+
+    &apos;&lt;head&gt;&apos;+
+    &apos;&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; &apos;+
+    &apos;charset=UTF-8&quot; /&gt;&apos;+
+    &apos;&lt;/head&gt;&apos;+
+    &apos;&lt;body&gt;&apos;+
+    &apos;&lt;form action=&quot;/upload&quot; enctype=&quot;multipart/form-data&quot; &apos;+
+    &apos;method=&quot;post&quot;&gt;&apos;+
+    &apos;&lt;input type=&quot;file&quot; name=&quot;upload&quot; multiple=&quot;multiple&quot;&gt;&apos;+
+    &apos;&lt;input type=&quot;submit&quot; value=&quot;Upload file&quot; /&gt;&apos;+
+    &apos;&lt;/form&gt;&apos;+
+    &apos;&lt;/body&gt;&apos;+
+    &apos;&lt;/html&gt;&apos;;
+    response.writeHead(200, {&quot;Content-Type&quot;: &quot;text/html&quot;});
+    response.write(body);
+    response.end();
+}
+function upload(response,request) {
+  console.log(&quot;Request handler &apos;upload&apos; was called.&quot;);
+  var form=new formidable.IncomingForm();  //创建对象
+  form.uploadDir=&apos;tmp&apos;;  //设置上传文件存放的文件夹，默认为系统的临时文件夹，可以使用fs.rename()改变上传文件的存放路径和文件名 临时文件存放路径，如果没有这段代码可能会报错，因为跨磁盘分区移动的问题
+  console.log(&quot;about to parse&quot;);
+  form.parse(request,function(error,fields,files){  //解析request对象
+    console.log(&quot;parsing done&quot;);
+    fs.renameSync(files.upload.path,&quot;/tmp/test.png&quot;);  //重命名，oldpath--&gt;newpath
+    response.writeHead(200, {&quot;Content-Type&quot;: &quot;text/html&quot;});
+    response.write(&quot;received image:&lt;br/&gt;&quot;);
+    response.write(&quot;&lt;img src=&apos;/show&apos;&gt;&quot;);
+    response.end();
+  });
+}
+function show(response, request) {
+  console.log(&quot;Request handler &apos;show&apos; was called.&quot;);
+  fs.readFile(&quot;/tmp/test.png&quot;, &quot;binary&quot;, function(error, file) {  //fs.readfile(文件名，编码，回调函数(err,data))异步读取
+    if(error) {
+      response.writeHead(500, {&quot;Content-Type&quot;: &quot;text/plain&quot;});
+      response.write(error + &quot;\n&quot;);
+      response.end();
+    } else {
+      response.writeHead(200, {&quot;Content-Type&quot;: &quot;image/png&quot;});
+      response.write(file, &quot;binary&quot;);
+      response.end();
+    }
+  });
+}
+exports.start = start;
+exports.upload = upload;
+exports.show=show;
+</code></pre>
   </article>
   <div class="random-toc-area">
   <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">显示目录</button>
