@@ -1,0 +1,371 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="yann">
+  
+  
+  
+  
+    <meta name="description" content="前言：本文没有太多的文字讲解，以代码分析初识nodeJs。
+参考资料：node入门
+目标：
+浏览器输入http://domain/start时，可以看到一个页面，页面上有一个文件上传的表单。
+用户可以选择一个图片并提交表单，随后文件将被上传到http://domain/upload，该页面完成上传后会把图片显示在页面上。
+
+结构：
+http服务器
+路由
+请求处理
+返回视图
+
+
+主文件inde...">
+  
+  <title>nodeJs(一)构建简单的图片上传应用 [ Yann's Blog ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+    <div class="item prev">
+      <a href="/2017/04/21/first-article/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        开篇：博客的由来
+      </div>
+    </div>
+  
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://ooqzvtjby.bkt.clouddn.com/t014bb7fdb7eb424606.jpg"/>
+          <div id="homelink">Yann's Blog</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/index.html">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">归档</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>nodeJs(一)构建简单的图片上传应用</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">撰写于 2017-04-26</span>
+      
+        <span id = "post-title-updated">修改于 2017-04-27</span>
+      
+      
+      <span id = "post-title-categories">分类
+      
+      
+        
+        
+        <a href="/categories/nodeJs学习/">nodeJs学习</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      标签
+      
+      
+        
+        
+        <a href="/tags/node-js/">node.js</a>
+      
+      </span>
+      
+    </p>
+    
+    <hr>
+<p>前言：本文没有太多的文字讲解，以代码分析初识nodeJs。</p>
+<p>参考资料：<br><a href="http://nodebeginner.org/index-zh-cn.html" target="_blank" rel="external">node入门</a></p>
+<h3 id="目标："><a href="#目标：" class="headerlink" title="目标："></a>目标：</h3><ul>
+<li>浏览器输入<a href="http://domain/start" target="_blank" rel="external">http://domain/start</a>时，可以看到一个页面，页面上有一个文件上传的表单。</li>
+<li>用户可以选择一个图片并提交表单，随后文件将被上传到<a href="http://domain/upload" target="_blank" rel="external">http://domain/upload</a>，该页面完成上传后会把图片显示在页面上。</li>
+</ul>
+<h3 id="结构："><a href="#结构：" class="headerlink" title="结构："></a>结构：</h3><ol>
+<li>http服务器</li>
+<li>路由</li>
+<li>请求处理</li>
+<li>返回视图</li>
+</ol>
+<hr>
+<h4 id="主文件index-js"><a href="#主文件index-js" class="headerlink" title="主文件index.js"></a>主文件index.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">var server=require(&quot;./server&quot;);  //require从外部获取模块的接口</div><div class="line">var router=require(&quot;./router&quot;);</div><div class="line">var requestHandlers=require(&quot;./requestHandlers&quot;);</div><div class="line">var handle=&#123;&#125;;  //对象传值，不同的pathname对应不同的处理请求</div><div class="line">handle[&apos;/&apos;]=requestHandlers.start;</div><div class="line">handle[&apos;/start&apos;]=requestHandlers.start;</div><div class="line">handle[&apos;/upload&apos;]=requestHandlers.upload;</div><div class="line">handle[&apos;/show&apos;]=requestHandlers.show;</div><div class="line">server.start(router.route,handle);</div></pre></td></tr></table></figure>
+<h4 id="http服务器server-js"><a href="#http服务器server-js" class="headerlink" title="http服务器server.js"></a>http服务器server.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">var http = require(&quot;http&quot;);  //请求node.js自带的http模块</div><div class="line">var url = require(&quot;url&quot;);</div><div class="line">function start(route,handle) &#123;</div><div class="line">  function onRequest(request, response) &#123;</div><div class="line">    var pathname=url.parse(request.url).pathname;  //方法如下</div><div class="line">    console.log(&quot;Request for&quot;+pathname+&quot;received;&quot;);</div><div class="line">    route(handle,pathname,response,request);</div><div class="line">  &#125;</div><div class="line">  http.createServer(onRequest).listen(8888);  //http模块函数启动服务器监听8888端口</div><div class="line">  console.log(&quot;Server has started.&quot;);</div><div class="line">&#125;</div><div class="line">exports.start = start;</div></pre></td></tr></table></figure>
+<p>url.parse()方法介绍</p>
+<p>eg：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">var url = require(&apos;url&apos;);</div><div class="line">var a = url.parse(&apos;http://example.com:8080/one?a=index&amp;t=article&amp;m=default&apos;);</div><div class="line">console.log(a);</div><div class="line">//输出结果：</div><div class="line">&#123;</div><div class="line">    protocol : &apos;http&apos; ,</div><div class="line">    auth : null ,</div><div class="line">    host : &apos;example.com:8080&apos; ,</div><div class="line">    port : &apos;8080&apos; ,</div><div class="line">    hostname : &apos;example.com&apos; ,</div><div class="line">    hash : null ,</div><div class="line">    search : &apos;?a=index&amp;t=article&amp;m=default&apos;,</div><div class="line">    query : &apos;a=index&amp;t=article&amp;m=default&apos;,</div><div class="line">    pathname : &apos;/one&apos;,</div><div class="line">    path : &apos;/one?a=index&amp;t=article&amp;m=default&apos;,</div><div class="line">    href : &apos;http://example.com:8080/one?a=index&amp;t=article&amp;m=default&apos;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>这里引入一组概念：exports 和 module.exports，同有导出模块功能，形似但非神似。<br>每一个node.js执行文件都会自动创建一个module对象，同时，module对象会创建一个exports的属性，初始值是{},<br><code>exports=module.exports={}</code><br>exports是引用 module.exports的值。exports 被改变的时候，module.exports不会被改变，而模块导出的时候，真正导出的执行是module.exports，而不是exports.</p>
+<h4 id="路由router-js"><a href="#路由router-js" class="headerlink" title="路由router.js"></a>路由router.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">function route(handle,pathname,response,request)&#123;</div><div class="line">  console.log(&quot;about to route a request for&quot;+pathname);</div><div class="line">  if(typeof handle[pathname]===&apos;function&apos;)&#123;  //检查给定路径对应的请求处理程序是否存在</div><div class="line">    handle[pathname](response,request);</div><div class="line">  &#125; else &#123;</div><div class="line">    console.log(&quot;no request handle found for&quot;+pathname);</div><div class="line">    response.writeHead(404, &#123;&quot;Content-Type&quot;: &quot;text/plain&quot;&#125;);  //收到请求发送http状态码和http头的内容类型</div><div class="line">    response.write(&quot;404 Not found&quot;);  //向http相应主体发送文本</div><div class="line">    response.end();  //完成响应</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line">exports.route=route;</div></pre></td></tr></table></figure>
+<h4 id="请求处理requestHandlers-js"><a href="#请求处理requestHandlers-js" class="headerlink" title="请求处理requestHandlers.js"></a>请求处理requestHandlers.js</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line">var querystring=require(&quot;querystring&quot;),</div><div class="line">    fs=require(&apos;fs&apos;),</div><div class="line">    formidable=require(&quot;formidable&quot;);</div><div class="line">function start(response) &#123;</div><div class="line">  console.log(&quot;Request handler &apos;start&apos; was called.&quot;);</div><div class="line">  var body= &apos;&lt;html&gt;&apos;+</div><div class="line">    &apos;&lt;head&gt;&apos;+</div><div class="line">    &apos;&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; &apos;+</div><div class="line">    &apos;charset=UTF-8&quot; /&gt;&apos;+</div><div class="line">    &apos;&lt;/head&gt;&apos;+</div><div class="line">    &apos;&lt;body&gt;&apos;+</div><div class="line">    &apos;&lt;form action=&quot;/upload&quot; enctype=&quot;multipart/form-data&quot; &apos;+</div><div class="line">    &apos;method=&quot;post&quot;&gt;&apos;+</div><div class="line">    &apos;&lt;input type=&quot;file&quot; name=&quot;upload&quot; multiple=&quot;multiple&quot;&gt;&apos;+</div><div class="line">    &apos;&lt;input type=&quot;submit&quot; value=&quot;Upload file&quot; /&gt;&apos;+</div><div class="line">    &apos;&lt;/form&gt;&apos;+</div><div class="line">    &apos;&lt;/body&gt;&apos;+</div><div class="line">    &apos;&lt;/html&gt;&apos;;</div><div class="line">    response.writeHead(200, &#123;&quot;Content-Type&quot;: &quot;text/html&quot;&#125;);</div><div class="line">    response.write(body);</div><div class="line">    response.end();</div><div class="line">&#125;</div><div class="line">function upload(response,request) &#123;</div><div class="line">  console.log(&quot;Request handler &apos;upload&apos; was called.&quot;);</div><div class="line">  var form=new formidable.IncomingForm();</div><div class="line">  form.uploadDir=&apos;tmp&apos;;</div><div class="line">  console.log(&quot;about to parse&quot;);</div><div class="line">  form.parse(request,function(error,fields,files)&#123;</div><div class="line">    console.log(&quot;parsing done&quot;);</div><div class="line">    fs.renameSync(files.upload.path,&quot;/tmp/test.png&quot;);</div><div class="line">    response.writeHead(200, &#123;&quot;Content-Type&quot;: &quot;text/html&quot;&#125;);</div><div class="line">    response.write(&quot;received image:&lt;br/&gt;&quot;);</div><div class="line">    response.write(&quot;&lt;img src=&apos;/show&apos;&gt;&quot;);</div><div class="line">    response.end();</div><div class="line">  &#125;);</div><div class="line">&#125;</div><div class="line">function show(response, request) &#123;</div><div class="line">  console.log(&quot;Request handler &apos;show&apos; was called.&quot;);</div><div class="line">  fs.readFile(&quot;/tmp/test.png&quot;, &quot;binary&quot;, function(error, file) &#123;</div><div class="line">    if(error) &#123;</div><div class="line">      response.writeHead(500, &#123;&quot;Content-Type&quot;: &quot;text/plain&quot;&#125;);</div><div class="line">      response.write(error + &quot;\n&quot;);</div><div class="line">      response.end();</div><div class="line">    &#125; else &#123;</div><div class="line">      response.writeHead(200, &#123;&quot;Content-Type&quot;: &quot;image/png&quot;&#125;);</div><div class="line">      response.write(file, &quot;binary&quot;);</div><div class="line">      response.end();</div><div class="line">    &#125;</div><div class="line">  &#125;);</div><div class="line">&#125;</div><div class="line">exports.start = start;</div><div class="line">exports.upload = upload;</div><div class="line">exports.show=show;</div></pre></td></tr></table></figure>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">显示目录</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">隐藏目录</button>
+  <div class="random-toc">
+    <h2>目录</h2>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#目标："><span class="toc-text">目标：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#结构："><span class="toc-text">结构：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#主文件index-js"><span class="toc-text">主文件index.js</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#http服务器server-js"><span class="toc-text">http服务器server.js</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#路由router-js"><span class="toc-text">路由router.js</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#请求处理requestHandlers-js"><span class="toc-text">请求处理requestHandlers.js</span></a></li></ol></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+    <a href="/2017/04/21/first-article/" class="prev">&larr; 上一篇 开篇：博客的由来</a>
+  
+
+  
+
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+      <div id="uyan_frame"></div>
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by yann using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+
+  <!-- UY BEGIN -->
+<script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2131760"></script>
+<!-- UY END -->
+
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://ooqzvtjby.bkt.clouddn.com/t014bb7fdb7eb424606.jpg">
+    <p id="description">岁月，袅袅一首歌。年华，凄凄一首诗。青春，茫茫一片天。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/xugaoyang/xugaoyang.github.io">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="http://weibo.com/u/1945036984">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?df5e656bcdbdf508255847fd67436a9d";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
