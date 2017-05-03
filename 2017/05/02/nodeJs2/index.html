@@ -16,30 +16,8 @@
   
   
   
-    <meta name="description" content="http.ServerRequest提供了以下4个事件用于控制请求体传输
-
-
-
-名称
-含义
-
-
-
-
-data
-当请求体数据到来时，该事件被触发。该事件提供一个参数
-
-
-chunk
-表示接收到的数据。如果该事件没有被监听，那么请求体将会被抛弃。该事件可能会被调用多次。
-
-
-end
-当请求体数据传输完成时，该事件被触发，此后将不会再有数据到来。
-
-
-close
-用户当前请求结束时，该事件被触发。...">
+    <meta name="description" content="爬虫，是个有趣的东西，它可以过滤掉你不需要的网页内容，提取特定的信息。嗯…想到了一些坏坏的事情。咳咳，本人倾向于下载高清电影本地观看，然后在一个阳光明媚的午后或是夜深人静的凌晨慢慢品味，所以有一些高清电影网站的资源，本文就以其中一个网站电影天堂为例写一个爬虫。
+百度电影天堂进入主页，我们的目标是爬取最右侧的最新推荐名称，打开F12发现通用的父标签类名是.co_content4，需要获取的是a...">
   
   <title>nodeJs(二)构建简单爬虫程序 [ Yann's Blog ]</title>
   
@@ -131,7 +109,7 @@ close
     <p class="page-title-sub">
       <span id = "post-title-date">撰写于 2017-05-02</span>
       
-        <span id = "post-title-updated">修改于 2017-05-02</span>
+        <span id = "post-title-updated">修改于 2017-05-03</span>
       
       
       <span id = "post-title-categories">分类
@@ -156,37 +134,10 @@ close
       
     </p>
     
-    <p>http.ServerRequest提供了以下4个事件用于控制请求体传输</p>
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>data</td>
-<td>当请求体数据到来时，该事件被触发。该事件提供一个参数</td>
-</tr>
-<tr>
-<td>chunk</td>
-<td>表示接收到的数据。如果该事件没有被监听，那么请求体将会被抛弃。该事件可能会被调用多次。</td>
-</tr>
-<tr>
-<td>end</td>
-<td>当请求体数据传输完成时，该事件被触发，此后将不会再有数据到来。</td>
-</tr>
-<tr>
-<td>close</td>
-<td>用户当前请求结束时，该事件被触发。不同于end，如果用户强制终止了传输，也还是调用close。</td>
-</tr>
-</tbody>
-</table>
-<p>爬虫，是个有趣的东西，它可以过滤掉你不需要的网页内容，提取特定的信息。嗯…想到了一些坏坏的事情。咳咳，本人倾向于下载高清电影本地观看，然后在一个阳光明媚的午后或是夜深人静的凌晨慢慢品味，所以了解一些高清电影网站，本文就以其中一个网站电影天堂为例写一个爬虫。</p>
+    <p>爬虫，是个有趣的东西，它可以过滤掉你不需要的网页内容，提取特定的信息。嗯…想到了一些坏坏的事情。咳咳，本人倾向于下载高清电影本地观看，然后在一个阳光明媚的午后或是夜深人静的凌晨慢慢品味，所以有一些高清电影网站的资源，本文就以其中一个网站电影天堂为例写一个爬虫。</p>
 <p>百度<a href="http://www.dytt8.net/" target="_blank" rel="external">电影天堂</a>进入主页，我们的目标是爬取最右侧的最新推荐名称，打开F12发现通用的父标签类名是.co_content4，需要获取的是a标签里的文字.</p>
 <p><img src="http://ooqzvtjby.bkt.clouddn.com/dytt.png" alt=""></p>
-<p><strong>代码index.js</strong><br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> cheerio = <span class="built_in">require</span>(<span class="string">'cheerio'</span>);  <span class="comment">//抓取页面模块</span></div><div class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);  <span class="comment">//http模块</span></div><div class="line"><span class="keyword">var</span> iconv = <span class="built_in">require</span>(<span class="string">'iconv-lite'</span>);  <span class="comment">//编码转换模块</span></div><div class="line"><span class="keyword">var</span> url = <span class="string">'http://www.dytt8.net'</span>;  <span class="comment">//目标网址</span></div><div class="line">http.get(url, <span class="function"><span class="keyword">function</span>(<span class="params">res</span>) </span>&#123;</div><div class="line">  <span class="comment">//console.log(res);</span></div><div class="line">  <span class="keyword">var</span> chunks = [];</div><div class="line">  res.on(<span class="string">'data'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">chunk</span>) </span>&#123;  <span class="comment">//接收到的数据</span></div><div class="line">    chunks.push(chunk);  </div><div class="line">  &#125;);</div><div class="line">  <span class="comment">/* chunks里面存储着网页的 html 内容，将它转码传给 cheerio.load 之后 */</span></div><div class="line">  <span class="comment">/* 就可以得到一个实现了 jQuery 接口的变量，将它命名为 `$` */</span></div><div class="line">  <span class="comment">/* 剩下就都是 jQuery 的内容了 */</span></div><div class="line">  res.on(<span class="string">'end'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> titles = [];</div><div class="line">    <span class="comment">/* 由于咱们发现此网页的编码格式为gb2312，所以需要对其进行转码，否则乱码 */</span></div><div class="line">    <span class="comment">/* 依据：“&lt;meta http-equiv="Content-Type" content="text/html; charset=gb2312"&gt; */</span></div><div class="line">    <span class="keyword">var</span> html = iconv.decode(Buffer.concat(chunks), <span class="string">'gb2312'</span>);</div><div class="line">    <span class="keyword">var</span> $ = cheerio.load(html, &#123;<span class="attr">decodeEntities</span>: <span class="literal">false</span>&#125;);</div><div class="line">    $(<span class="string">'.co_content4 a'</span>).each(<span class="function"><span class="keyword">function</span> (<span class="params">idx, element</span>) </span>&#123;</div><div class="line">      <span class="keyword">var</span> $element = $(element);</div><div class="line">      titles.push(&#123;</div><div class="line">        <span class="attr">title</span>: $element.text()</div><div class="line">      &#125;);</div><div class="line">    &#125;); </div><div class="line">    <span class="built_in">console</span>.log(titles);     </div><div class="line">  &#125;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure></p>
+<p><strong>代码index.js</strong><br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> cheerio = <span class="built_in">require</span>(<span class="string">'cheerio'</span>);  <span class="comment">/*抓取页面模块*/</span></div><div class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);  <span class="comment">/*http模块*/</span></div><div class="line"><span class="keyword">var</span> iconv = <span class="built_in">require</span>(<span class="string">'iconv-lite'</span>);  <span class="comment">/*编码转换模块*/</span></div><div class="line"><span class="keyword">var</span> url = <span class="string">'http://www.dytt8.net'</span>;  <span class="comment">/*目标网址*/</span></div><div class="line">http.get(url, <span class="function"><span class="keyword">function</span>(<span class="params">res</span>) </span>&#123;</div><div class="line">  <span class="comment">/*console.log(res);*/</span></div><div class="line">  <span class="keyword">var</span> chunks = [];</div><div class="line">  res.on(<span class="string">'data'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">chunk</span>) </span>&#123;  <span class="comment">/*接收到的数据*/</span></div><div class="line">    chunks.push(chunk);  </div><div class="line">  &#125;);</div><div class="line">  <span class="comment">/* chunks里面存储着网页的 html 内容，将它转码传给 cheerio.load 之后 */</span></div><div class="line">  <span class="comment">/* 就可以得到一个实现了 jQuery 接口的变量，将它命名为 `$` */</span></div><div class="line">  <span class="comment">/* 剩下就都是 jQuery 的内容了 */</span></div><div class="line">  res.on(<span class="string">'end'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> titles = [];</div><div class="line">    <span class="comment">/* 由于咱们发现此网页的编码格式为gb2312，所以需要对其进行转码，否则乱码 */</span></div><div class="line">    <span class="comment">/* 依据：“&lt;meta http-equiv="Content-Type" content="text/html; charset=gb2312"&gt; */</span></div><div class="line">    <span class="keyword">var</span> html = iconv.decode(Buffer.concat(chunks), <span class="string">'gb2312'</span>);</div><div class="line">    <span class="keyword">var</span> $ = cheerio.load(html, &#123;<span class="attr">decodeEntities</span>: <span class="literal">false</span>&#125;);</div><div class="line">    $(<span class="string">'.co_content4 a'</span>).each(<span class="function"><span class="keyword">function</span> (<span class="params">idx, element</span>) </span>&#123;</div><div class="line">      <span class="keyword">var</span> $element = $(element);</div><div class="line">      titles.push(&#123;</div><div class="line">        <span class="attr">title</span>: $element.text()</div><div class="line">      &#125;);</div><div class="line">    &#125;); </div><div class="line">    <span class="built_in">console</span>.log(titles);     </div><div class="line">  &#125;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure></p>
 <p><strong>命令行结果如下：</strong><br><img src="http://ooqzvtjby.bkt.clouddn.com/dytt1.png" alt=""></p>
 <p>电影名称get！！！虽然才二三十行代码，但是其中所包含的知识点却不少，后续会介绍常用的模块。</p>
 
